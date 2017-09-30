@@ -1,0 +1,1 @@
+start chrome "https://www.youtube.com/watch?list=UUkAwRcT2YMLJtcvLbAvP66A&v=hpYcFt0fSNU"
