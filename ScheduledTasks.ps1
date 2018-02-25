@@ -1,4 +1,13 @@
 ﻿function dailyShutdownTask($time, $name){
+    $remindTime = [datetime]$time
+    $remindTime = $remindTime.AddMinutes(-10)
+
+    $action = New-ScheduledTaskAction -Execute "C:\WindowsStuff\Reminders\Va t'coucher.bat"
+
+    $trigger =  New-ScheduledTaskTrigger -Daily -At $remindTime
+
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name"
+
     $action = New-ScheduledTaskAction -Execute 'shutdown.exe' -Argument '/s'
 
     $trigger =  New-ScheduledTaskTrigger -Daily -At $time
@@ -7,10 +16,12 @@
 }
 
 function weeklyShutdownTask($time, $name){
-    
-    $action = New-ScheduledTaskAction -Execute "C:\Users\sbker\Desktop\WindowsStuff\Reminders\Va t'coucher.bat"
+    $remindTime = [datetime]$time
+    $remindTime = $remindTime.AddMinutes(-10)
 
-    $trigger =  New-ScheduledTaskTrigger -Weekly -At $time -DaysOfWeek Sunday,Monday,Tuesday,Wednesday,Thursday
+    $action = New-ScheduledTaskAction -Execute "C:\WindowsStuff\Reminders\Va t'coucher.bat"
+
+    $trigger =  New-ScheduledTaskTrigger -Weekly -At $remindTime -DaysOfWeek Sunday,Monday,Tuesday,Wednesday,Thursday
 
     Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name"
 
@@ -21,28 +32,39 @@ function weeklyShutdownTask($time, $name){
     Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name
 }
 
+function deleteTask($name){
+    $taskExists = Get-ScheduledTask | Where-Object {$_.TaskName -like $name -or $_.Name -like $name }
+    if($taskExists){
+        Unregister-ScheduledTask -TaskName $name -Confirm:$false
+        Write-Host "$name deleted"
+    }
+    else{
+        Write-Host "Task doesn't exist"
+    }
+}
 
-Unregister-ScheduledTask -TaskName "MidnightShutdown" -Confirm:$false
-Unregister-ScheduledTask -TaskName "MidnightHalfShutdown" -Confirm:$false
-Unregister-ScheduledTask -TaskName "OneShutdown" -Confirm:$false
-Unregister-ScheduledTask -TaskName "OneHalfShutdown" -Confirm:$false
-Unregister-ScheduledTask -TaskName "TwoShutdown" -Confirm:$false
-Unregister-ScheduledTask -TaskName "TwoHalfShutdown" -Confirm:$false
+
+deleteTask -name "MidnightShutdown"
+deleteTask -name "MidnightHalfShutdown"
+deleteTask -name "OneShutdown"
+deleteTask -name "OneHalfShutdown"
+deleteTask -name "TwoShutdown"
+deleteTask -name "TwoHalfShutdown"
 
 
 
 
-Unregister-ScheduledTask -TaskName "RemindTenTen" -Confirm:$false
-Unregister-ScheduledTask -TaskName "RemindTenHalf" -Confirm:$false
-Unregister-ScheduledTask -TaskName "RemindEleven" -Confirm:$false
-Unregister-ScheduledTask -TaskName "RemindElevenHalf" -Confirm:$false
+deleteTask -name "RemindTenTen"
+deleteTask -name "RemindTenHalf"
+deleteTask -name "RemindEleven"
+deleteTask -name "RemindElevenHalf"
 
-Unregister-ScheduledTask -TaskName "TenTen" -Confirm:$false
-Unregister-ScheduledTask -TaskName "TenHalf" -Confirm:$false
-Unregister-ScheduledTask -TaskName "Eleven" -Confirm:$false
-Unregister-ScheduledTask -TaskName "ElevenHalf" -Confirm:$false
+# deleteTask -name "TenTen"
+deleteTask -name "TenHalf"
+deleteTask -name "Eleven"
+deleteTask -name "ElevenHalf"
 
-weeklyShutdownTask -time 22:10 -name "TenTen"
+#weeklyShutdownTask -time 22:10 -name "TenTen"
 weeklyShutdownTask -time 22:30 -name "TenHalf"
 weeklyShutdownTask -time 23:00 -name "Eleven"
 weeklyShutdownTask -time 23:30 -name "ElevenHalf"
