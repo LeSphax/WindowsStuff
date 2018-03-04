@@ -1,4 +1,6 @@
-﻿function dailyShutdownTask($time, $name){
+﻿$TaskSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries
+
+function dailyShutdownTask($time, $name){
     $remindTime = [datetime]$time
     $remindTime = $remindTime.AddMinutes(-10)
 
@@ -6,13 +8,13 @@
 
     $trigger =  New-ScheduledTaskTrigger -Daily -At $remindTime
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name"
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name" -Settings $TaskSettings
 
     $action = New-ScheduledTaskAction -Execute 'shutdown.exe' -Argument '/s'
 
     $trigger =  New-ScheduledTaskTrigger -Daily -At $time
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Settings $TaskSettings
 }
 
 function weeklyShutdownTask($time, $name){
@@ -23,19 +25,20 @@ function weeklyShutdownTask($time, $name){
 
     $trigger =  New-ScheduledTaskTrigger -Weekly -At $remindTime -DaysOfWeek Sunday,Monday,Tuesday,Wednesday,Thursday
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name"
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName "Remind$name" -Settings $TaskSettings
 
     $action = New-ScheduledTaskAction -Execute 'shutdown.exe' -Argument '/s'
 
     $trigger =  New-ScheduledTaskTrigger -Weekly -At $time -DaysOfWeek Sunday,Monday,Tuesday,Wednesday,Thursday
 
-    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name
+    Register-ScheduledTask -Action $action -Trigger $trigger -TaskName $name -Settings $TaskSettings
 }
 
 function deleteTask($name){
     $taskExists = Get-ScheduledTask | Where-Object {$_.TaskName -like $name -or $_.Name -like $name }
     if($taskExists){
         Unregister-ScheduledTask -TaskName $name -Confirm:$false
+        Unregister-ScheduledTask -TaskName "Remind$name" -Confirm:$false
         Write-Host "$name deleted"
     }
     else{
@@ -50,14 +53,6 @@ deleteTask -name "OneShutdown"
 deleteTask -name "OneHalfShutdown"
 deleteTask -name "TwoShutdown"
 deleteTask -name "TwoHalfShutdown"
-
-
-
-
-deleteTask -name "RemindTenTen"
-deleteTask -name "RemindTenHalf"
-deleteTask -name "RemindEleven"
-deleteTask -name "RemindElevenHalf"
 
 # deleteTask -name "TenTen"
 deleteTask -name "TenHalf"
@@ -75,5 +70,17 @@ dailyShutdownTask -time 01am -name "OneShutdown"
 dailyShutdownTask -time 01:30am -name "OneHalfShutdown"
 dailyShutdownTask -time 02am -name "TwoShutdown"
 dailyShutdownTask -time 02:30am -name "TwoHalfShutdown"
+
+$hour = 01
+$minute = 30
+For ($i=0; $i -le 29; $i++) {
+    $minutes = ($minute + $i)%60
+    $time = [datetime]"${hour}:${minutes}am"
+    $name = "ZZZ${hour}${minutes}ForcedShutdown"
+    deleteTask -name $name
+    dailyShutdownTask -time $time -name $name
+    Write-Host "$name"
+}
+
 
 
